@@ -1,0 +1,77 @@
+contact:
+  name: 'John Doe'
+  email: 'john@example.com'
+  github: '<github>'
+
+education:
+  - program: 'Master of Science in Subject'
+    institution: 'University'
+    location: 'Town, Country'
+    time: 'yyyy-mm - yyyy-mm'
+    description: |
+      Relevant Coursework: X, Y, Z.
+      Minor in Minor
+
+  - program: 'Bachelor of Science in Subject'
+    institution: 'University'
+    location: 'Town, Country'
+    time: 'yyyy-mm - yyyy-mm'
+    description: |
+      Relevant Coursework: X, Y, Z.
+      Minor in Minor
+
+experience:
+  - position: 'Position X'
+    company: 'Company X'
+    location: 'Town, Country'
+    time: 'yyyy-mm - yyyy-mm'
+    description: |
+      Achieved X% growth for XYZ using A, B, and C skills.
+      Led XYZ which led to X% of improvement in ABC
+      Developed XYZ that did A, B, and C using X, Y, and Z.
+
+  - position: 'Position Y'
+    company: 'Company Y'
+    location: 'Town, Country'
+    time: 'yyyy-mm - yyyy-mm'
+    description: |
+      Achieved X% growth for XYZ using A, B, and C skills.
+      Led XYZ which led to X% of improvement in ABC
+      Developed XYZ that did A, B, and C using X, Y, and Z.
+
+  - position: 'Position Z'
+    company: 'Company Z'
+    location: 'Town, Country'
+    time: 'yyyy-mm - yyyy-mm'
+    description: |
+      Achieved X% growth for XYZ using A, B, and C skills.
+      Led XYZ which led to X% of improvement in ABC
+      Developed XYZ that did A, B, and C using X, Y, and Z.
+
+projects:
+  - title: 'Project X'
+    github: 'yyyy-mm - yyyy-mm'
+    description: |
+      Achieved X% growth for XYZ using A, B, and C skills.
+      Led XYZ which led to X% of improvement in ABC
+      Developed XYZ that did A, B, and C using X, Y, and Z.
+
+  - title: 'Project Y'
+    github: 'yyyy-mm - yyyy-mm'
+    description: |
+      Achieved X% growth for XYZ using A, B, and C skills.
+      Led XYZ which led to X% of improvement in ABC
+      Developed XYZ that did A, B, and C using X, Y, and Z.
+
+skillset: 
+  - area: 'Area X'
+    description: |
+      Skill X, Skill Y, Skill Z
+
+  - area: 'Area Y'
+    description: |
+      Skill X, Skill Y, Skill Z
+
+  - area: 'Area Z'
+    description: |
+      Skill X, Skill Y, Skill Z
