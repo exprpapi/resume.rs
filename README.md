@@ -1,8 +1,10 @@
 # `resume.rs`
 
-A glorified templating resume generator written in Rust.
+> It's not about the resume of the man, but about the man in the resume.
 
-Looks for a `resume.yaml` file and generates a `resume.pdf`
+A standalone glorified templating resume generator written in Rust.
+
+Looks for a `resume.yaml` file and generates both `resume.tex` and `resume.pdf`
 
 The `yaml` schema is by all means not yet ratified.
 
