@@ -1,19 +1,19 @@
 contact:
   name: 'John Doe'
-  email: 'john@example.com'
+  email: 'johndoe@example.com'
   github: 'johndoe'
 
 education:
   - program: 'Master of Science in Subject'
     institution: 'University, Town, Country'
-    time: 'yyyy-mm - yyyy-mm'
+    graduation: 'Expected June YYYY'
     description:
       - 'Relevant Coursework: X, Y, Z.'
       - 'Minor in Minor'
 
   - program: 'Bachelor of Science in Subject'
     institution: 'University, Town, Country'
-    time: 'yyyy-mm - yyyy-mm'
+    graduation: 'Sept YYYY'
     description:
       - 'Relevant Coursework: X, Y, Z.'
       - 'Minor in Minor'
@@ -21,7 +21,8 @@ education:
 experience:
   - position: 'Position X'
     company: 'Company X, Town, Country'
-    time: 'yyyy-mm - yyyy-mm'
+    begin: 'June YYYY'
+    end: 'Present'
     description:
       - 'Achieved X% growth for XYZ using A, B, and C skills.'
       - 'Led XYZ which led to X% of improvement in ABC'
@@ -29,7 +30,8 @@ experience:
 
   - position: 'Position Y'
     company: 'Company Y, Town, Country'
-    time: 'yyyy-mm - yyyy-mm'
+    begin: 'Aug YYYY'
+    end: 'May YYYY'
     description:
       - 'Achieved X% growth for XYZ using A, B, and C skills.'
       - 'Led XYZ which led to X% of improvement in ABC'
@@ -38,7 +40,8 @@ experience:
   - position: 'Position Z'
     company: |
       Satriale's Pork Store
-    time: 'yyyy-mm - yyyy-mm'
+    begin: 'Oct YYYY'
+    end: 'July YYYY'
     description:
       - 'Achieved X% growth for XYZ using A, B, and C skills.'
       - 'Led XYZ which led to X% of improvement in ABC'
@@ -46,7 +49,7 @@ experience:
 
 projects:
   - title: |
-      'Project X'
+      Project X
     category: 'Project X Category'
     github: 'github.com/johndoe/projectx'
     description:

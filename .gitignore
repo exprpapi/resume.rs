@@ -1,0 +1,11 @@
+*
+!.gitignore
+!README.md
+!demo.gif
+!demo_input.png
+!demo_output.png
+!resume.rs
+!resume.yaml
+!resume.tex
+!resume.pdf
+!resume.png

@@ -4,26 +4,60 @@
 //! cargo-features = ["edition2024"]
 //! package.edition = "2024"
 //! [dependencies]
+//! clap = { version = "4.4.6", features = ["derive"] }
 //! indoc = "2.0.4"
 //! regex = "1.10"
-//! serde = {version = "1.0", features = ["derive"]}
+//! serde = { version = "1.0", features = ["derive"] }
 //! serde_yaml = "0.9"
 //! tectonic = "0.14"
 //! ```
 
+use clap::{Parser, Subcommand};
 use indoc::{formatdoc, indoc};
 use regex::Regex;
 use serde::Deserialize;
+use std::path::Path;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-  let src = format!("resume.yaml");
-  let dst = format!("resume.pdf");
+  match Cli::parse().command {
+    Some(Commands::Pdf{src}) => compile(&src, true),
+    Some(Commands::Tex{src}) => compile(&src, false),
+    None => compile("resume.yaml", true),
+  }?;
+  Ok(())
+}
+
+fn compile(src: &str, emit_pdf: bool) -> Result<(), Box<dyn std::error::Error>> {
   let resume = serde_yaml::from_str::<Resume>(&std::fs::read_to_string(src)?)?;
   let tex = resume.to_tex();
-  std::fs::write("resume.tex", &tex)?;
-  let pdf = Resume::to_pdf(&tex);
-  std::fs::write(dst, &pdf)?;
+  let dst_tex = swap_stem(src, ".yaml", ".tex");
+  std::fs::write(dst_tex, &tex)?;
+  if emit_pdf {
+    let dst_pdf = swap_stem(src, ".yaml", ".pdf");
+    std::fs::write(dst_pdf, Resume::to_pdf(&tex))?;
+  }
   Ok(())
+}
+
+fn swap_stem(file: &str, from: &str, to: &str) -> String {
+  if !file.ends_with(from) {
+    panic!("file does not have the expected stem");
+  }
+  let stem = Path::new(file).file_stem().and_then(|stem| stem.to_str()).unwrap_or_default();
+  format!("{stem}{to}")
+}
+
+#[derive(Debug, Parser)]
+#[command(about = "resume generator", long_about = None)]
+struct Cli {
+  #[command(subcommand)]
+  command: Option<Commands>,
+}
+
+#[derive(Debug, Subcommand)]
+enum Commands {
+  Pdf { src: String },
+  Tex { src: String },
 }
 
 #[derive(Deserialize)]
@@ -49,7 +83,7 @@ struct Educations(Vec<Education>);
 struct Education {
   program: String,
   institution: String,
-  time: String,
+  graduation: String,
   description: Vec<String>,
 }
 
@@ -60,7 +94,8 @@ struct Experiences(Vec<Experience>);
 struct Experience {
   position: String,
   company: String,
-  time: String,
+  begin: String,
+  end: String,
   description: Vec<String>,
 }
 
@@ -85,7 +120,7 @@ struct Skill {
 }
 
 impl Resume {
-  fn to_pdf(tex: &String) -> Vec<u8> {
+  fn to_pdf(tex: &str) -> Vec<u8> {
     tectonic::latex_to_pdf(tex).expect("processing resume to pdf failed")
   }
 
@@ -101,19 +136,16 @@ impl Resume {
       \usepackage[utf8]{inputenc}
       \usepackage[parfill]{parskip}
       \usepackage[margin=1cm]{geometry}
+      \usepackage{hyperref, graphicx, enumitem, titlesec, fontspec}
       \usepackage[sfdefault]{inter}
-      \usepackage{hyperref, graphicx, enumitem, titlesec}
       \begin{document}
-      \titleformat{\section}
-        {\vspace{0cm}\large\bf}
-        {}
-        {0cm}
-        {\MakeUppercase}
-        [\vspace{-0.2em}\titlerule\vspace{-0.5em}]
+      \titleformat{\section}{\large\bf}{}{0cm}{}[\titlerule\vspace{-0.5em}]
     ");
+
     let postamble = indoc!(r"
       \end{document}
     ");
+
     formatdoc!(r"
       {preamble}
       {contact}
@@ -121,18 +153,19 @@ impl Resume {
       {experience}
       {projects}
       {skills}
-      {postamble}")
+      {postamble}
+    ")
   } 
 }
 
 impl Contact {
   fn to_tex(&self) -> String {
-    let name = &self.name;
-    let email = &self.email;
-    let github = &self.github;
+    let name = tex_sanitize(&self.name.trim());
+    let email = tex_sanitize(&self.email.trim());
+    let github = tex_sanitize(&self.github.trim());
     formatdoc!(r"
       \begin{{center}}
-      {{\bf\LARGE\MakeUppercase{{{name}}}}} \\[.8em]
+      {{\Huge\textbf{{{name}}}}} \\[.8em]
       {email} \hspace{{2em}} github.com/{github}
       \end{{center}}")
   }
@@ -146,12 +179,11 @@ impl Educations {
 
 impl Education {
   fn to_tex(&self) -> String {
-    tex_role(
-      &self.program,
-      &self.institution,
-      &self.time,
-      self.description.clone(),
-    )
+    let program = tex_sanitize(&self.program.trim());
+    let institution = tex_sanitize(&self.institution.trim());
+    let graduation = tex_sanitize(&self.graduation.trim());
+    let description = tex_sanitize_vec(&self.description);
+    tex_role(&program, &institution, &graduation, &description)
   }
 }
 
@@ -163,12 +195,14 @@ impl Experiences {
 
 impl Experience {
   fn to_tex(&self) -> String {
-    tex_role(
-      &self.position,
-      &self.company,
-      &self.time,
-      self.description.clone(),
-    )
+    let begin = tex_sanitize(&self.begin.trim());
+    let end = tex_sanitize(&self.end.trim());
+    let endash = r"--";
+    let time = format!("{begin} {endash} {end}");
+    let position = tex_sanitize(&self.position.trim());
+    let company = tex_sanitize(&self.company.trim());
+    let description = tex_sanitize_vec(&self.description);
+    tex_role(&position, &company, &time, &description)
   }
 }
 
@@ -180,12 +214,11 @@ impl Projects {
 
 impl Project {
   fn to_tex(&self) -> String {
-    tex_role(
-      &self.title,
-      &self.category,
-      &self.github,
-      self.description.clone(),
-    )
+    let title = tex_sanitize(&self.title.trim());
+    let category = tex_sanitize(&self.category.trim());
+    let github = tex_sanitize(&self.github.trim());
+    let description = tex_sanitize_vec(&self.description);
+    tex_role(&title, &category, &github, &description)
   }
 }
 
@@ -197,8 +230,8 @@ impl Skills {
 
 impl Skill {
   fn to_tex(&self) -> String {
-    let area = &self.area;
-    let description = &self.description.trim();
+    let area = tex_sanitize(&self.area.trim());
+    let description = tex_sanitize(&self.description.trim());
     formatdoc!(r"\textbf{{{area}}}:\ {{{description}}}")
   }
 }
@@ -206,7 +239,7 @@ impl Skill {
 fn tex_section(name: &str, items: Vec<String>) -> String {
   let name = tex_sanitize(&name);
   let leftmargin = r"0cm";
-  let itemsep = r"-0.3em";
+  let itemsep = r"-0.0em";
   let label = r"{}";
   let items = tex_itemize(items, leftmargin, itemsep, label);
   formatdoc!(r"
@@ -215,15 +248,11 @@ fn tex_section(name: &str, items: Vec<String>) -> String {
     {items}")
 }
 
-fn tex_role(t1: &str, t2: &str, t3: &str, items: Vec<String>) -> String {
-  let t1 = tex_sanitize(&t1);
-  let t2 = tex_sanitize(&t2);
-  let t3 = tex_sanitize(&t3);
-  let items = items.iter().map(|s| tex_sanitize(&s)).collect::<Vec<_>>();
+fn tex_role(t1: &str, t2: &str, t3: &str, items: &[String]) -> String {
   let leftmargin = r"*";
-  let itemsep = r"-0.5em";
+  let itemsep = r"-0.7em";
   let label = r"\textbullet";
-  let items = tex_itemize(items, leftmargin, itemsep, label);
+  let items = tex_itemize(items.to_vec(), leftmargin, itemsep, label);
   formatdoc!(r"
     \textbf{{{t1}}}, {t2} \hfill {t3}
     {items}")
@@ -234,11 +263,10 @@ fn tex_itemize(mut items: Vec<String>, leftmargin: &str, itemsep: &str, label: &
     s.insert_str(0, r"\item ");
   }
   let items = items.join("\n");
-  let itemize = formatdoc!(r"
-    \begin{{itemize}}[leftmargin={leftmargin}, topsep=-0.5em, itemsep={itemsep}, label={label}]
+  formatdoc!(r"
+    \begin{{itemize}}[leftmargin={leftmargin}, topsep=-2em, itemsep={itemsep}, label={label}]
     {items}
-    \end{{itemize}}");
-  itemize
+    \end{{itemize}}")
 }
 
 fn tex_sanitize(input: &str) -> String {
@@ -256,4 +284,8 @@ fn tex_sanitize(input: &str) -> String {
   }).into();
   result = dollar_regex.replace_all(&result, r"\$").into();
   result.trim().into()
+}
+
+fn tex_sanitize_vec(input: &[String]) -> Vec<String> {
+  input.iter().map(|s| tex_sanitize(&s.trim())).collect::<Vec<_>>()
 }
