@@ -6,6 +6,7 @@
 //! [dependencies]
 //! clap = { version = "4.4.6", features = ["derive"] }
 //! indoc = "2.0.4"
+//! notify = "6.1.1"
 //! regex = "1.10"
 //! serde = { version = "1.0", features = ["derive"] }
 //! serde_yaml = "0.9"
@@ -14,28 +15,63 @@
 
 use clap::{Parser, Subcommand};
 use indoc::{formatdoc, indoc};
+use notify::{
+  event::{Event, EventKind, AccessKind, AccessMode},
+  recommended_watcher,
+  RecursiveMode,
+  Watcher,
+};
 use regex::Regex;
 use serde::Deserialize;
-use std::path::Path;
+use std::{
+  path::Path,
+  sync::mpsc::channel,
+};
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
-  match Cli::parse().command {
-    Some(Commands::Pdf{src}) => compile(&src, true),
-    Some(Commands::Tex{src}) => compile(&src, false),
-    None => compile("resume.yaml", true),
-  }?;
-  Ok(())
+type Error = Result<(), Box<dyn std::error::Error>>;
+
+fn main() -> Error {
+  Cli::parse().command.expect("Invalid Command").exec()
 }
 
-fn compile(src: &str, emit_pdf: bool) -> Result<(), Box<dyn std::error::Error>> {
-  let resume = serde_yaml::from_str::<Resume>(&std::fs::read_to_string(src)?)?;
-  let tex = resume.to_tex();
-  let dst_tex = swap_stem(src, ".yaml", ".tex");
-  std::fs::write(dst_tex, &tex)?;
-  if emit_pdf {
-    let dst_pdf = swap_stem(src, ".yaml", ".pdf");
-    std::fs::write(dst_pdf, Resume::to_pdf(&tex))?;
+#[derive(Debug, Parser)]
+#[command(about = "resume generator")]
+struct Cli {
+  #[command(subcommand)]
+  command: Option<Commands>,
+}
+
+#[derive(Debug, Subcommand)]
+enum Commands {
+  Build { src: Option<String> },
+  Watch { src: Option<String> },
+}
+
+impl<'a> Commands {
+  fn exec(&'a self) -> Error {
+    let or_default = |s: &'a Option<String>| -> &'a str {
+      s.as_deref().unwrap_or("resume.yaml")
+    };
+    use Commands::*;
+    match self {
+      Build { src } => build(or_default(src)),
+      Watch { src } => watch(or_default(src), build),
+    }
   }
+}
+
+fn build(src: &str) -> Error {
+  let yaml = std::fs::read_to_string(src)?;
+  let resume = serde_yaml::from_str::<Resume>(&yaml)?;
+  let dst_tex = swap_stem(src, ".yaml", ".tex");
+  let dst_pdf = swap_stem(src, ".yaml", ".pdf");
+  let tex = resume.to_tex();
+  let pdf = Resume::to_pdf(&tex);
+  println!("Writing tex to {dst_tex}");
+  std::fs::write(dst_tex, &tex)?;
+  println!("Writing pdf to {dst_pdf}");
+  std::fs::write(dst_pdf, &pdf)?;
+  println!("Done.");
   Ok(())
 }
 
@@ -47,17 +83,20 @@ fn swap_stem(file: &str, from: &str, to: &str) -> String {
   format!("{stem}{to}")
 }
 
-#[derive(Debug, Parser)]
-#[command(about = "resume generator", long_about = None)]
-struct Cli {
-  #[command(subcommand)]
-  command: Option<Commands>,
-}
 
-#[derive(Debug, Subcommand)]
-enum Commands {
-  Pdf { src: String },
-  Tex { src: String },
+fn watch(src: &str, callback: impl Fn(&str) -> Error) -> Error {
+  let (tx, rx) = channel();
+  let mut watcher = recommended_watcher(tx).unwrap();
+  watcher.watch(Path::new(src), RecursiveMode::NonRecursive).unwrap();
+  println!("Watching for changes in: {}", src);
+
+  for r in rx {
+    if let Ok(Event{kind: EventKind::Access(AccessKind::Close(AccessMode::Write)), .. }) = r {
+      println!("File modified. Running a command...");
+      callback(src)?;
+    }
+  }
+  Ok(())
 }
 
 #[derive(Deserialize)]

@@ -14,19 +14,28 @@ The generated [`resume.tex`](./resume.tex) is human-readable and can serve for f
 
 ## Usage
 
+To generate `.tex` and `.pdf` from `resume.yaml`
 ```bash
-./resume.rs
+./resume.rs build resume.yaml
 ```
 
-This is equivalent to
+or, equivalently,
+
 ```bash
-./resume.rs pdf resume.yaml
+./resume.rs build
 ```
 
-To only generate tex
+To watch and automatically rebuild `.tex` and `.pdf` on 'resume.yaml' file save
 ```bash
-./resume.rs tex resume.yaml
+./resume.rs watch resume.yaml
 ```
+
+or, equivalently
+
+```bash
+./resume.rs watch
+```
+
 
 ## Installation
 
@@ -42,10 +51,6 @@ Only uses `cargo`. You might need to install the nightly toolchain.
 ## Notes
 
 The `yaml` schema is by all means not yet ratified.
-
-It might be faster to use a system-wide installation of `tectonic` after generating the `tex`, maybe even setting up a file watcher.
-
-Might implement a file-change-listener that automatically compiles the `yaml` on saving.
 
 ## Demo
 
