@@ -38,8 +38,7 @@ experience:
       - 'Developed XYZ that did A, B, and C using X, Y, and Z.'
 
   - position: 'Position Z'
-    company: |
-      Satriale's Pork Store
+    company: 'Company Z, Town, Country'
     begin: 'Oct YYYY'
     end: 'July YYYY'
     description:

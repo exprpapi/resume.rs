@@ -6,11 +6,11 @@ A standalone templating resume generator written in Rust.
 
 | Input `yaml`                | Output `pdf`                 |
 | --------------------------- | ---------------------------- |
-| ![input](./demo_input.png)  | ![output](./demo_output.png) |
+| ![input](./README.d/demo_input.png)  | ![output](./README.d/demo_output.png) |
 
-Looks for a [`resume.yaml`](./resume.yaml) file and generates both [`resume.tex`](./resume.tex) and [`resume.pdf`](./resume.pdf).
+Looks for a [`resume.yaml`](./example/resume.yaml) file and generates both [`resume.tex`](./example/resume.tex) and [`resume.pdf`](./example/resume.pdf).
 
-The generated [`resume.tex`](./resume.tex) is human-readable and can serve for further customizations.
+The generated [`resume.tex`](./example/resume.tex) is human-readable and can serve for further customizations.
 
 ## Usage
 
@@ -25,7 +25,7 @@ or, equivalently,
 ./resume.rs build
 ```
 
-To watch and automatically rebuild `.tex` and `.pdf` on 'resume.yaml' file save
+To watch and automatically rebuild `.tex` and `.pdf` on `resume.yaml` file save
 ```bash
 ./resume.rs watch resume.yaml
 ```
@@ -36,6 +36,25 @@ or, equivalently
 ./resume.rs watch
 ```
 
+or, just
+```bash
+./resume.rs
+```
+
+
+```bash
+./resume.rs build [resume.yaml]           # creates once tex and pdf
+./resume.rs build-pdf [resume.yaml]       # creates once tex and pdf
+./resume.rs build-tex [resume.yaml]       # creates once tex only
+./resume.rs                               # creates repeatedly tex and pdf
+./resume.rs watch [resume.yaml]           # creates repeatedly tex and pdf
+./resume.rs watch-texonly [resume.yaml]   # creates repeatedly tex only
+```
+
+Usually, one wants to:
+```bash
+./resume.rs
+```
 
 ## Installation
 

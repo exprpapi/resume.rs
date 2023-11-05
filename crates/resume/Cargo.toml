@@ -1,0 +1,16 @@
+[package]
+name = "resume"
+edition = "2021"
+version = "0.0.1"
+
+[dependencies]
+anyhow = "1.0.75"
+clap = { version = "4.4.7", features = ["derive"] }
+indoc = "2.0.4"
+notify = "6.1.1"
+regex = "1.10.2"
+serde = { version = "1.0.190", features = ["derive"] }
+serde_yaml = "0.9.27"
+tectonic = "0.14.1"
+tectonic_bundles = "0.3.1"
+texformat = { path = "../texformat" }
